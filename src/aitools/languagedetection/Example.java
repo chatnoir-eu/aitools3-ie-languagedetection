@@ -16,7 +16,7 @@ public class Example {
 		String text = "Die abzugebenden Aufgaben sowie der Abgabetermin sind im Übungsblatt verzeichnet.";
 		Locale locale = languageDetection.getLanguage(text);
 		String language = locale.getLanguage();
-		System.out.println(language);
+		System.out.println("Detected language: " + language);
 
 	}
 

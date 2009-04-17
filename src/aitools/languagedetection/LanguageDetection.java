@@ -34,10 +34,10 @@ public class LanguageDetection {
 	 * stored on the hard disk in a serialized form. If you create the library
 	 * as JAR using the build.xml file, then a fresh serialization is created.
 	 */
-	private static final String serializationName = "LanguageModels.serialized";
+	public static final String SERIALIZATION_NAME = "LanguageModels.serialized";
 	static {
 		InputStream is = LanguageModel.class
-				.getResourceAsStream(serializationName);
+				.getResourceAsStream(SERIALIZATION_NAME);
 		if (is != null) {
 			load(is);
 		} else {
@@ -167,9 +167,9 @@ public class LanguageDetection {
 	 */
 	private static void write() {
 		try {
-			File f = new File(LanguageModel.LanguageModelDir.getParentFile(),
-					serializationName);
-			FileOutputStream fos = new FileOutputStream(f);
+			File serializazion = new File(LanguageModel.LanguageModelDir
+					.getParentFile(), SERIALIZATION_NAME);
+			FileOutputStream fos = new FileOutputStream(serializazion);
 			BufferedOutputStream bos = new BufferedOutputStream(fos);
 			ObjectOutputStream objOut = new ObjectOutputStream(bos);
 			objOut.writeObject(languageModelIndex);
@@ -177,7 +177,8 @@ public class LanguageDetection {
 			// Saving the serialized file in both, the src and bin directory.
 			// Either single location for the serialized file could cause
 			// unexpected behavior of this method, so we put it in both.
-			copyFile(f, new File(f.getAbsolutePath().replace("src", "bin")));
+			copyFile(serializazion, new File(serializazion.getAbsolutePath()
+					.replace("src", "bin")));
 		} catch (IOException ioe) {
 			ioe.printStackTrace();
 			System.exit(-1);
