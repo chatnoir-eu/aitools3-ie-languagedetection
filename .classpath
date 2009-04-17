@@ -3,9 +3,5 @@
 	<classpathentry excluding="de/aitools/languagedetection/DetectionByStopwords.java" kind="src" path="src"/>
 	<classpathentry kind="src" path="conf"/>
 	<classpathentry exported="true" kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/aitools2-document"/>
-	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/aitools2-converter"/>
-	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/aitools2-parser"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/aitools2-common"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
