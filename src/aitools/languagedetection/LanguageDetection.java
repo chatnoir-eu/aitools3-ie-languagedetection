@@ -31,7 +31,8 @@ public class LanguageDetection {
 
 	/**
 	 * As not to build the language model index at every execution, the index is
-	 * stored on the hard disk in a serialized form.
+	 * stored on the hard disk in a serialized form. If you create the library
+	 * as JAR using the build.xml file, then a fresh serialization is created.
 	 */
 	private static final String serializationName = "LanguageModels.serialized";
 	static {
