@@ -191,6 +191,9 @@ public class LanguageDetection {
 	 * @throws IOException
 	 */
 	private static void copyFile(File in, File out) throws IOException {
+		if (in.equals(out)) {
+			return;
+		}
 		FileInputStream fis = new FileInputStream(in);
 		FileOutputStream fos = new FileOutputStream(out);
 		byte[] buf = new byte[1024];

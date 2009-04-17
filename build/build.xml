@@ -55,9 +55,9 @@
 	<!-- - - - - - - - - - - - - - - - - - 
 	          target: create_serialization                      
 	         - - - - - - - - - - - - - - - - - -->
-	<target name="create_serialization">
+	<target name="create_serialization" depends="compile">
 		<delete file="${project.classbin}/aitools/languagedetection/LanguageModels.serialized" />
-		<java classname="aitools.languagedetection.LanguageDetection" fork="true">
+		<java classname="aitools.languagedetection.LanguageDetection">
 			<classpath>
 				<pathelement path="${project.classbin}" />
 			</classpath>
