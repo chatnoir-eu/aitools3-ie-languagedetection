@@ -14,14 +14,6 @@
 	<property name="project.classbin" location="${project.build}/classbin" />
 	<property name="project.jarbin" location="${project.build}/jarbin" />
 
-	<!--
-	<path id="project.external.classes">
-		<pathelement location="../aitools2-common/bin" />
-	</path>
-	<property name="project.external.classes" refid="project.external.classes" />
-	-->
-
-
 	<!-- ================================= 
 	          target: jar              
 	        ================================= -->
