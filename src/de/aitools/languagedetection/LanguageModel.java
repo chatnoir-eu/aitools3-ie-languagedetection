@@ -1,4 +1,4 @@
-package aitools.languagedetection;
+package de.aitools.languagedetection;
 
 import java.io.BufferedWriter;
 import java.io.File;

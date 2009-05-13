@@ -1,4 +1,4 @@
-package aitools.languagedetection;
+package de.aitools.languagedetection;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -15,7 +15,12 @@ import java.util.Locale;
 /**
  * This class provides the main interface to the language detection package.
  * 
- * TODO: The interface (getLanguage() method) could as well be static.
+ * TODO: The interface (getLanguage() method) could as well be static? But in
+ * future one could want to get more information about for example the second
+ * most probable language or the distance from the most probable language to the
+ * next one...
+ * 
+ * TODO: fabian loose: fix polish model
  * 
  * @author bege5932
  * 
@@ -125,7 +130,6 @@ public class LanguageDetection {
 							postlist.put(model.getLocale(), model
 									.getTrigramIndex().get(trigram));
 						}
-
 						languageModelIndex.put(trigram, postlist);
 					}
 					++count;
