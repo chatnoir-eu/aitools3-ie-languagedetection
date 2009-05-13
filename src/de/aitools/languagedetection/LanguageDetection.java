@@ -20,8 +20,11 @@ import java.util.Locale;
  * most probable language or the distance from the most probable language to the
  * next one...
  * 
- * TODO: fabian loose: fix models: pl,lt -- good test with vertical search
- * results
+ * TODO: fabian loose: fix models: pl,lt -- these (and probably a few other)
+ * models are the best guess when the text contains many white spaces, special
+ * character etc. ... so the language (wiki) corpus still seems to have
+ * problems. -- good test with vertical search results, as these texts somehow
+ * randomly come from the web
  * 
  * @author bege5932
  * 
