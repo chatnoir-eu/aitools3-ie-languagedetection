@@ -20,7 +20,8 @@ import java.util.Locale;
  * most probable language or the distance from the most probable language to the
  * next one...
  * 
- * TODO: fabian loose: fix polish model
+ * TODO: fabian loose: fix models: pl,lt -- good test with vertical search
+ * results
  * 
  * @author bege5932
  * 
