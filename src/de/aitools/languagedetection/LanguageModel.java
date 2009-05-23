@@ -73,7 +73,7 @@ public class LanguageModel implements Serializable {
 	/**
 	 * This is the directory where all the .model files can be found.
 	 */
-	public static final File LanguageModelDir;
+	public static final File modelDir;
 	static {
 		URL url = LanguageModel.class.getResource("models");
 		File dir = null;
@@ -83,7 +83,7 @@ public class LanguageModel implements Serializable {
 			e.printStackTrace();
 			System.exit(-1);
 		}
-		LanguageModelDir = dir;
+		modelDir = dir;
 	}
 
 	/**
@@ -96,7 +96,7 @@ public class LanguageModel implements Serializable {
 	public static LanguageModel load(Locale locale)
 			throws FileNotFoundException {
 		Map<String, Double> trigramMap = new HashMap<String, Double>();
-		Scanner fileScanner = new Scanner(new File(LanguageModelDir, locale
+		Scanner fileScanner = new Scanner(new File(modelDir, locale
 				.getLanguage()
 				+ ".model"));
 		fileScanner.useDelimiter("_ENDLINE_\n");
@@ -118,7 +118,7 @@ public class LanguageModel implements Serializable {
 	 * @throws IOException
 	 */
 	public static void save(LanguageModel languageModel) throws IOException {
-		File f = new File(LanguageModelDir, languageModel.locale.getLanguage()
+		File f = new File(modelDir, languageModel.locale.getLanguage()
 				+ ".model");
 		BufferedWriter bw = new BufferedWriter(new FileWriter(f));
 

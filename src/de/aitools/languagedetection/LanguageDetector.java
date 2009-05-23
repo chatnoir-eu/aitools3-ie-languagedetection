@@ -5,13 +5,16 @@ import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.net.URL;
 import java.util.LinkedHashMap;
 import java.util.Locale;
+import java.util.Map;
 
 /**
  * This class is the main interface to the language detection package.
@@ -32,21 +35,26 @@ import java.util.Locale;
 public class LanguageDetector {
 
 	/**
-	 * Inverted index from which maps a character trigram onto a list of
-	 * occurence frequencies in all supported languages, i.e.,
+	 * Inverted index which maps a character trigram onto a list of occurence 
+	 * frequencies in all supported languages, i.e.,
 	 * ([trigram] => [language1|frequency1], ..., [languageN|frequencyN]).
 	 */
-	private static LinkedHashMap<String, LinkedHashMap<Locale, Double>> languageModelIndex;
+	private static Map<String, Map<Locale, Double>> languageModelIndex;
 
 	/**
-	 * As not to build the language model index at every execution, the index is
-	 * stored on the hard disk in a serialized form. If you create the library
-	 * as JAR using the build.xml file, then a fresh serialization is created.
+	 * In order not to build the language model index at each time when the
+	 * language detector is used, the index is stored on the hard disk as
+	 * serialized object. If you create the library as JAR using the Ant build
+	 * file, the index is refreshed.
 	 */
-	public static final String SERIALIZATION_NAME = "language-models.obj";
+	private static final String PACKAGE_PATH;
+	private static final String SERIALIZATION_NAME;
 	static {
-		InputStream is = 
-			LanguageModel.class.getResourceAsStream(SERIALIZATION_NAME);
+		String thisPackage = LanguageDetector.class.getPackage().getName();
+		PACKAGE_PATH = "/" + thisPackage.replace('.', '/');
+		SERIALIZATION_NAME = "language-models.obj";
+		String resource = PACKAGE_PATH + "/" + SERIALIZATION_NAME;
+		InputStream is = LanguageModel.class.getResourceAsStream(resource);
 		if (is != null) { load(is); }
 		else {
 			createLanguageModelIndex();
@@ -69,8 +77,8 @@ public class LanguageDetector {
 		LinkedHashMap<String, Double> trigrams =
 			TrigramStatistic.getTrigrams(text);
 
-		LinkedHashMap<Locale, Double> result = new LinkedHashMap<Locale, Double>();
-		LinkedHashMap<Locale, Double> postlist = null;
+		Map<Locale, Double> result = new LinkedHashMap<Locale, Double>();
+		Map<Locale, Double> postlist = null;
 		for (String trigram : trigrams.keySet()) {
 			postlist = languageModelIndex.get(trigram);
 			if (postlist == null) {
@@ -105,42 +113,35 @@ public class LanguageDetector {
 
 	/**
 	 * This method creates the language model index from all the *.model files
-	 * in the models directory.
+	 * in the models package.
 	 */
 	private static void createLanguageModelIndex() {
 		System.out.println("Creating languagemodels ...");
 		System.out.println("This has to be done only once.\n");
-		languageModelIndex = new LinkedHashMap<String, LinkedHashMap<Locale, Double>>();
+		languageModelIndex = new LinkedHashMap<String, Map<Locale, Double>>();
 		int count = 0;
-		for (String language : LanguageModel.LanguageModelDir.list()) {
-			try {
-				if (language.endsWith("model")) {
-					System.out.print("Creating model: "
-							+ language.substring(0, 2) + " ... ");
-					LanguageModel model = LanguageModel.load(new Locale(
-							language.substring(0, 2)));
-					for (String trigram : model.getTrigramIndex().keySet()) {
-						LinkedHashMap<Locale, Double> postlist = languageModelIndex
-								.get(trigram);
-						if (postlist == null) {
-							postlist = new LinkedHashMap<Locale, Double>();
-						}
-						if (postlist.containsKey(model.getLocale())) {
-							postlist.put(model.getLocale(), postlist.get(model
-									.getLocale())
-									* model.getTrigramIndex().get(trigram));
-						} else {
-							postlist.put(model.getLocale(), model
-									.getTrigramIndex().get(trigram));
-						}
-						languageModelIndex.put(trigram, postlist);
-					}
-					++count;
-					System.out.println("done.");
+		for (File modelFile : LanguageModel.modelDir.listFiles()) {
+			String name = modelFile.getName();
+			if (!name.endsWith("model")) { continue; }
+			Locale language = new Locale(name.substring(0, 2));
+			System.out.print("Creating: " + language + " model ... ");
+			LanguageModel model = null;
+			try { model = LanguageModel.load(language); }
+			catch (FileNotFoundException e) { e.printStackTrace(); }
+			finally { if(model == null) { throw new RuntimeException(); } }
+			Map<String, Double> trigramIndex = model.getTrigramIndex(); 
+			for (String trigram : trigramIndex.keySet()) {
+				Map<Locale, Double> postlist = languageModelIndex.get(trigram);
+				if (postlist == null) {
+					postlist = new LinkedHashMap<Locale, Double>();
 				}
-			} catch (IOException e) {
-				e.printStackTrace();
+				Double value = postlist.get(language);
+				if (value != null) { value *= trigramIndex.get(trigram); }
+				postlist.put(language, value);
+				languageModelIndex.put(trigram, postlist);
 			}
+			++count;
+			System.out.println("done.");
 		}
 		System.out.println("+++ " + count + " languagemodels loaded.");
 	}
@@ -156,8 +157,7 @@ public class LanguageDetector {
 			ObjectInputStream objIn = new ObjectInputStream(
 					new BufferedInputStream(is));
 			try {
-				languageModelIndex = (LinkedHashMap<String, LinkedHashMap<Locale, Double>>) objIn
-						.readObject();
+				languageModelIndex = (Map<String, Map<Locale, Double>>) objIn.readObject();
 				objIn.close();
 			} catch (ClassNotFoundException e) {
 				objIn.close();
@@ -174,8 +174,8 @@ public class LanguageDetector {
 	 */
 	private static void write() {
 		try {
-			File serializazion = new File(LanguageModel.LanguageModelDir
-					.getParentFile(), SERIALIZATION_NAME);
+			String directory = LanguageModel.modelDir.getParentFile().getAbsolutePath().replaceAll(PACKAGE_PATH, "");
+			File serializazion = new File(directory, SERIALIZATION_NAME);
 			FileOutputStream fos = new FileOutputStream(serializazion);
 			BufferedOutputStream bos = new BufferedOutputStream(fos);
 			ObjectOutputStream objOut = new ObjectOutputStream(bos);
