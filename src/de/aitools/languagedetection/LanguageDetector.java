@@ -1,3 +1,4 @@
+// Copyright (C) 2009 webis.de. All rights reserved.
 package de.aitools.languagedetection;
 
 import java.io.BufferedInputStream;
@@ -13,7 +14,7 @@ import java.util.LinkedHashMap;
 import java.util.Locale;
 
 /**
- * This class provides the main interface to the language detection package.
+ * This class is the main interface to the language detection package.
  * 
  * TODO: The interface (getLanguage() method) could as well be static? But in
  * future one could want to get more information about for example the second
@@ -26,15 +27,14 @@ import java.util.Locale;
  * problems. -- good test with vertical search results, as these texts somehow
  * randomly come from the web
  * 
- * @author bege5932
- * 
+ * @author fabian.loose@uni-weimar.de
  */
-public class LanguageDetection {
+public class LanguageDetector {
 
 	/**
-	 * An inverted index from a given trigram of letters to a list of
-	 * frequencies in either language ([trigram] => [language1|frequency1],
-	 * [language2|frequency2], ..., [languageN|frequencyN]).
+	 * Inverted index from which maps a character trigram onto a list of
+	 * occurence frequencies in all supported languages, i.e.,
+	 * ([trigram] => [language1|frequency1], ..., [languageN|frequencyN]).
 	 */
 	private static LinkedHashMap<String, LinkedHashMap<Locale, Double>> languageModelIndex;
 
@@ -43,13 +43,12 @@ public class LanguageDetection {
 	 * stored on the hard disk in a serialized form. If you create the library
 	 * as JAR using the build.xml file, then a fresh serialization is created.
 	 */
-	public static final String SERIALIZATION_NAME = "LanguageModels.serialized";
+	public static final String SERIALIZATION_NAME = "language-models.obj";
 	static {
-		InputStream is = LanguageModel.class
-				.getResourceAsStream(SERIALIZATION_NAME);
-		if (is != null) {
-			load(is);
-		} else {
+		InputStream is = 
+			LanguageModel.class.getResourceAsStream(SERIALIZATION_NAME);
+		if (is != null) { load(is); }
+		else {
 			createLanguageModelIndex();
 			write();
 		}
@@ -67,8 +66,8 @@ public class LanguageDetection {
 	 * @return
 	 */
 	public Locale getLanguage(String text) {
-		LinkedHashMap<String, Double> trigrams = TrigramStatistic
-				.getTrigrams(text);
+		LinkedHashMap<String, Double> trigrams =
+			TrigramStatistic.getTrigrams(text);
 
 		LinkedHashMap<Locale, Double> result = new LinkedHashMap<Locale, Double>();
 		LinkedHashMap<Locale, Double> postlist = null;
@@ -216,12 +215,8 @@ public class LanguageDetection {
 	}
 
 	/**
-	 * The main function is needed to build the serialization for the jar with
+	 * The main method is required to build the serialization for the jar with
 	 * ant.
-	 * 
-	 * @param args
 	 */
-	public static void main(String[] args) {
-
-	}
+	public static void main(String[] args) {}
 }

@@ -1,23 +1,20 @@
+// Copyright (C) 2009 webis.de. All rights reserved.
 package de.aitools.languagedetection;
 
 import java.util.Locale;
 
 /**
- * This class simply demonstrates the usage of the language detection package.
+ * This class demonstrates the usage of the language detection package.
  * 
- * @author bege5932
- * 
+ * @author fabian.loose@uni-weimar.de
  */
 public class Example {
-
 	public static void main(String[] args) {
-
-		LanguageDetection languageDetection = new LanguageDetection();
-		String text = "Die abzugebenden Aufgaben sowie der Abgabetermin sind im Übungsblatt verzeichnet.";
-		Locale locale = languageDetection.getLanguage(text);
-		String language = locale.getLanguage();
-		System.out.println("Detected language: " + language);
-
+		LanguageDetector detector = new LanguageDetector();
+		String text = 
+			"Die abzugebenden Aufgaben sowie der Abgabetermin sind im " +
+			"Übungsblatt verzeichnet.";
+		Locale language = detector.getLanguage(text);
+		System.out.println("Detected language: " + language.getLanguage());
 	}
-
 }

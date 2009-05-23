@@ -1,3 +1,4 @@
+// Copyright (C) 2009 webis.de. All rights reserved.
 package de.aitools.languagedetection;
 
 import java.io.BufferedWriter;
