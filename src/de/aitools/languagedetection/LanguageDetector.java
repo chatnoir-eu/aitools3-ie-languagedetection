@@ -81,7 +81,7 @@ public class LanguageDetector {
 				}
 				Double value = trigramIndex.get(trigram);
 				if (postlist.containsKey(language)) {
-					value *= postlist.get(language);  // This is never called!
+					value *= postlist.get(language);  // This is never reached!
 				}
 				postlist.put(language, value);
 				languageModelIndex.put(trigram, postlist);
