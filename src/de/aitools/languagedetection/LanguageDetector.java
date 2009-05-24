@@ -38,7 +38,7 @@ public class LanguageDetector {
 	 * frequencies in all supported languages, i.e.,
 	 * ([trigram] => [language1|frequency1], ..., [languageN|frequencyN]).
 	 */
-	private static Map<String, Map<Locale, Double>> languageModelIndex;
+	private static Map<String, Map<Locale, Double>> languageModelIndex = null;
 
 	/**
 	 * In order not to build the language model index each time when the
@@ -92,7 +92,7 @@ public class LanguageDetector {
 	}
 	
 	/** Reads a language model index object from an input stream. */
-	@SuppressWarnings({ "unchecked", "finally" })
+	@SuppressWarnings({ "unchecked" })
 	private static void read(InputStream is) {
 		if(is == null) { throw new NullPointerException(); }
 		ObjectInputStream objIn = null;
@@ -100,11 +100,17 @@ public class LanguageDetector {
 			objIn = new ObjectInputStream(new BufferedInputStream(is));
 			languageModelIndex = 
 				(Map<String, Map<Locale, Double>>)objIn.readObject();
-			objIn.close();
 		}
 		catch (IOException e) { e.printStackTrace(); }
 		catch (ClassNotFoundException e) { e.printStackTrace(); }
-		finally { throw new RuntimeException(); }
+		finally {
+			if(languageModelIndex == null) { throw new RuntimeException(); }
+		}
+		try { objIn.close(); }
+		catch (IOException e) {
+			e.printStackTrace();
+			throw new RuntimeException();
+		}
 	}
 	
 	/** Writes the language model index to a within this package hierarchy. */
