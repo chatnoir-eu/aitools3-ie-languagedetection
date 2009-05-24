@@ -7,6 +7,7 @@ import java.util.Locale;
  * This class demonstrates the usage of the language detection package.
  * 
  * @author fabian.loose@uni-weimar.de
+ * @author martin.potthast@uni-weimar.de
  */
 public class Example {
 	public static void main(String[] args) {

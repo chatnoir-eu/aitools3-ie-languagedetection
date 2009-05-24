@@ -28,7 +28,7 @@ public class LanguageModel implements Serializable {
 	/**
 	 * This is the directory where all the .model files can be found.
 	 */
-	public static final File modelDir;
+	static final File modelDir;
 	static {
 		URL url = LanguageModel.class.getResource("models");
 		File dir = null;
