@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -119,9 +120,9 @@ public class LanguageDetector {
 		if(!directory.exists()) { return; }
 		File objFile = new File(directory, SERIALIZATION_NAME);
 		try {
-			FileOutputStream fos = new FileOutputStream(objFile);
-			BufferedOutputStream bos = new BufferedOutputStream(fos);
-			ObjectOutputStream objOut = new ObjectOutputStream(bos);
+			OutputStream out = new FileOutputStream(objFile);
+			out = new BufferedOutputStream(out);
+			ObjectOutputStream objOut = new ObjectOutputStream(out);
 			objOut.writeObject(languageModelIndex);
 			objOut.close();
 			// The serialized object is saved copied to the bin directory since
