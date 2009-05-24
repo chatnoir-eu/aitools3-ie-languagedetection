@@ -18,56 +18,11 @@ import java.util.Scanner;
  * This class represents a language model as a collection of the frequencies of
  * the most frequent trigrams of a language.
  * 
- * @author bege5932
- * 
+ * @author fabian.loose@uni-weimar.de
+ * @author martin.potthast@uni-weimar.de
  */
 public class LanguageModel implements Serializable {
 
-	/**
-	 * None static part
-	 */
-
-	private Locale locale = null;
-	private Map<String, Double> trigramIndex = null;
-	private boolean isNormalized = false;
-
-	public LanguageModel(Locale locale, Map<String, Double> trigrams) {
-		this.locale = locale;
-		this.trigramIndex = trigrams;
-	}
-
-	public Locale getLocale() {
-		return locale;
-	}
-
-	public Map<String, Double> getTrigramIndex() {
-		return trigramIndex;
-	}
-
-	/**
-	 * Normalize the vector of trigram frequencies.
-	 */
-	private void normalize() {
-		if (!isNormalized) {
-			double squares = 0;
-			for (Double d : trigramIndex.values()) {
-				squares += d * d;
-			}
-			squares = Math.sqrt(squares);
-			for (String trigram : trigramIndex.keySet()) {
-				trigramIndex.put(trigram, trigramIndex.get(trigram) / squares);
-			}
-			isNormalized = true;
-		}
-	}
-
-	/**
-	 * Static part:
-	 */
-
-	/**
-	 * UID for serialization.
-	 */
 	private static final long serialVersionUID = -1451504770410028784L;
 
 	/**
@@ -77,60 +32,64 @@ public class LanguageModel implements Serializable {
 	static {
 		URL url = LanguageModel.class.getResource("models");
 		File dir = null;
-		try {
-			dir = new File(url.toURI().getPath().replace("/bin/", "/src/"));
-		} catch (URISyntaxException e) {
-			e.printStackTrace();
-			System.exit(-1);
+		try { dir = new File(url.toURI().getPath().replace("/bin/", "/src/")); }
+		catch (URISyntaxException e) { e.printStackTrace(); }
+		finally { 
+			if(dir == null || !dir.exists()) { throw new RuntimeException(); }
 		}
 		modelDir = dir;
 	}
 
 	/**
-	 * Load a language model from the associated .model file.
-	 * 
-	 * @param locale
-	 * @return
-	 * @throws FileNotFoundException
+	 * Reads a language model from the locale's .model file.
 	 */
-	public static LanguageModel load(Locale locale)
-			throws FileNotFoundException {
+	public static LanguageModel read(Locale language) {
+		if(language == null) { throw new NullPointerException(); }
 		Map<String, Double> trigramMap = new HashMap<String, Double>();
-		Scanner fileScanner = new Scanner(new File(modelDir, locale
-				.getLanguage()
-				+ ".model"));
+		File modelFile = new File(modelDir, language.getLanguage() + ".model");
+		Scanner fileScanner = null;
+		try { fileScanner = new Scanner(modelFile); }
+		catch (FileNotFoundException e) { e.printStackTrace(); }
+		finally { if(fileScanner == null) { throw new RuntimeException(); } }
 		fileScanner.useDelimiter("_ENDLINE_\n");
 		while (fileScanner.hasNext()) {
 			Scanner lineScanner = new Scanner(fileScanner.next());
 			lineScanner.useDelimiter("_DELIMITER_");
 			trigramMap.put(lineScanner.next(), lineScanner.nextDouble());
 		}
-
-		LanguageModel lm = new LanguageModel(locale, trigramMap);
-		lm.isNormalized = true;
+		LanguageModel lm = new LanguageModel(language, trigramMap);
 		return lm;
 	}
 
 	/**
-	 * Write a language model to disk.
-	 * 
-	 * @param languageModel
-	 * @throws IOException
+	 * Writes a language model to the models directory.
 	 */
-	public static void save(LanguageModel languageModel) throws IOException {
-		File f = new File(modelDir, languageModel.locale.getLanguage()
-				+ ".model");
-		BufferedWriter bw = new BufferedWriter(new FileWriter(f));
-
-		if (!languageModel.isNormalized) {
-			languageModel.normalize();
+	public static void write(LanguageModel lm) throws IOException {
+		if(lm == null) { throw new NullPointerException(); }
+		File modelFile = 
+			new File(modelDir, lm.language.getLanguage() + ".model");
+		BufferedWriter bw = new BufferedWriter(new FileWriter(modelFile));
+		for (String trigram : lm.trigrams.keySet()) {
+			bw.append(trigram);
+			bw.append("_DELIMITER_");
+			bw.append(lm.trigrams.get(trigram).toString());
+			bw.append("_ENDLINE_\n");
 		}
-		for (String trigram : languageModel.trigramIndex.keySet()) {
-			bw.append(trigram + "_DELIMITER_"
-					+ languageModel.trigramIndex.get(trigram) + "_ENDLINE_\n");
-		}
-		bw.flush();
 		bw.close();
 	}
 
+
+	private Locale language;
+	private Map<String, Double> trigrams;
+
+	public LanguageModel(Locale language, Map<String, Double> trigrams) {
+		if(language == null || trigrams == null) { 
+			throw new NullPointerException();
+		} 
+		this.language = language;
+		this.trigrams = trigrams;
+	}
+
+	public Locale getLanguage() { return language; }
+	public Map<String, Double> getTrigrams() { return trigrams; }
 }

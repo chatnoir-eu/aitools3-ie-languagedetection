@@ -1,176 +1,111 @@
 // Copyright (C) 2009 webis.de. All rights reserved.
 package de.aitools.languagedetection;
 
+import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
-import java.util.LinkedHashMap;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 /**
- * 
- * @author bege5932
- * 
+ * @author fabian.loose@uni-weimar.de
+ * @author martin.potthast@uni-weimar.de
  */
 public class TrigramStatistic {
 
-	/**
-	 * The amount of trigrams to be used.
-	 */
-	private static final int threshold = 2500;
+	/** The maximum number of trigrams to be considered. */
+	private static final int MAX_NUM_TRIGRAMS = 2500;
+
+	/** The unicode upper bound for Latin characters. */
+	private static final char MAX_LATIN_CHAR_CODE = 0x024f;
 
 	/**
-	 * The unicode value which presents the upper border of Latin characters.
+	 * Creates a map containing a fixed number of the most frequent trigrams in
+	 * a given string. At the same time it is checked whether the amount of 
+	 * non-Latin characters is higher then the amount of Latin characters. In 
+	 * this case all Latin character trigrams are removed. This is necessary
+	 * because English words and sentences can be found in texts of all
+	 * languages, and, since the alphabet of Eastern languages like Chinese is
+	 * larger than the Western alphabet, English trigrams may have a high
+	 * frequencies even if there is only little English text to be found.
 	 */
-	private static final char latinCharThreashold = 0x024f;
-
-	/**
-	 * Create a map of a fixed number of the most frequent trigrams from a given
-	 * string. At the same step we check if the amount of none Latin characters
-	 * is higher then the amount of Latin characters. If this is the case, all
-	 * Latin characters are removed. This is done due to the fact that English
-	 * words and sentences can be found in texts of any language. In languages
-	 * like Chinese, though, the 'wrong' characters badly disturb the overall
-	 * frequencies, because the Chinese language has far more characters and so
-	 * English trigrams tend to have a high probability even if the English part
-	 * of the text is by far smaller than the Chinese one.
-	 * 
-	 * @param text
-	 * @return
-	 */
-	public static LinkedHashMap<String, Double> getTrigrams(String text) {
-		LinkedHashMap<String, Double> trigrams = new LinkedHashMap<String, Double>();
+	public static Map<String, Double> getTrigrams(String s) {
+		Map<String, Double> trigrams = new HashMap<String, Double>();
 		int latinChar = 0;
 		int nonLatinChar = 0;
-
 		String trigram;
-		for (int i = 0; i < text.length() - 3; ++i) {
-			trigram = text.substring(i, i + 3);
+		for (int i = 0; i < s.length() - 3; ++i) {
+			trigram = new String(s.substring(i, i + 3));
 			Double d = trigrams.get(trigram);
-			if (d == null) {
-				trigrams.put(trigram, 1.);
-			} else {
-				trigrams.put(trigram, d + 1.);
-			}
-			for (int j = 0; j < 3; ++j) {
-				if (trigram.charAt(j) < latinCharThreashold) {
-					++latinChar;
-				} else {
-					++nonLatinChar;
-				}
+			if (d == null) { d = new Double(0); }
+			trigrams.put(trigram, d + 1);
+			for (int j = 0; j < trigram.length(); ++j) {
+				if (trigram.charAt(j) < MAX_LATIN_CHAR_CODE) { ++latinChar; }
+				else { ++nonLatinChar; }
 			}
 		}
-		if (nonLatinChar > latinChar) {
-			trigrams = removeLatinChar(trigrams);
-		}
-
-		trigrams = trim(invert(trigrams));
-		trigrams = normalize(trigrams);
-
+		if (nonLatinChar > latinChar) { removeLatin(trigrams); }
+		trigrams = trim(trigrams);
+		normalize(trigrams);
 		return trigrams;
 	}
 
-	/**
-	 * Removes all Latin characters; That is: characters below unicode 0x024f.
-	 * 
-	 * @param trigrams
-	 * @return
-	 */
-	private static LinkedHashMap<String, Double> removeLatinChar(
-			LinkedHashMap<String, Double> trigrams) {
-		LinkedHashMap<String, Double> newMap = new LinkedHashMap<String, Double>();
-		for (String trigram : trigrams.keySet()) {
-			boolean add = true;
-			for (int j = 0; j < 3; ++j) {
-				if (trigram.charAt(j) < latinCharThreashold) {
-					add = false;
-				}
+	/** Removes all trigrams that contain at least one Latin character. */
+	private static void removeLatin(Map<String, Double> trigrams) {
+		List<String> keys = new ArrayList<String>(trigrams.keySet());
+		for (String trigram : keys) {
+			boolean retain = true;
+			for (int j = 0; j < trigram.length(); ++j) {
+				if (trigram.charAt(j) < MAX_LATIN_CHAR_CODE) { retain = false; }
 			}
-			if (add) {
-				newMap.put(trigram, trigrams.get(trigram));
-			}
+			if (!retain) { trigrams.remove(trigram); }
 		}
-		return newMap;
 	}
 
-	/**
-	 * Normalize the 'vector' of trigrams.
-	 * 
-	 * @param trigrams
-	 * @return
-	 */
-	private static LinkedHashMap<String, Double> normalize(
-			LinkedHashMap<String, Double> trigrams) {
-		LinkedHashMap<String, Double> newMap = new LinkedHashMap<String, Double>();
-		double norm = 0;
-		for (Double d : trigrams.values()) {
-			norm += d * d;
+	/** Retains the MAX_NUM_TRIGRAMS most frequent trigrams. */
+	private static Map<String, Double> trim(Map<String, Double> trigrams) {
+		Map<Double, List<String>> frequencyTrigramsMap = invert(trigrams);
+		List<Double> frequencies = 
+			new ArrayList<Double>(frequencyTrigramsMap.keySet());
+		Collections.sort(frequencies, Collections.reverseOrder());
+		Map<String, Double> newTrigrams = new HashMap<String, Double>();
+		int count = 0;
+		for (Double frequency : frequencies) {
+			for (String trigram : frequencyTrigramsMap.get(frequency)) {
+				if (++count > MAX_NUM_TRIGRAMS) { break; }
+				newTrigrams.put(trigram, frequency);
+			}
 		}
-
-		norm = Math.sqrt(norm);
-
-		for (String trigram : trigrams.keySet()) {
-			newMap.put(trigram, trigrams.get(trigram) / norm);
-		}
-		return newMap;
-
+		return newTrigrams;
 	}
-
-	/**
-	 * Invert the map of trigrams and frequencies in order to sort the trigrams
-	 * by frequency.
-	 * 
-	 * @param trigramToFrequency
-	 * @return
-	 */
-	private static LinkedHashMap<Double, List<String>> invert(
-			LinkedHashMap<String, Double> trigramToFrequency) {
-		LinkedHashMap<Double, List<String>> frequencyToTrigram = new LinkedHashMap<Double, List<String>>();
-
-		for (String trigram : trigramToFrequency.keySet()) {
-			Double frequency = trigramToFrequency.get(trigram);
-			List<String> trigramList = frequencyToTrigram.get(frequency);
+	
+	/** Inverts the mapping of trigrams to frequencies. */
+	private static Map<Double, List<String>> invert(
+		Map<String, Double> trigramFrequencyMap
+	) {
+		Map<Double, List<String>> frequencyTrigramsMap = 
+			new HashMap<Double, List<String>>();
+		for (String trigram : trigramFrequencyMap.keySet()) {
+			Double frequency = trigramFrequencyMap.get(trigram);
+			List<String> trigramList = frequencyTrigramsMap.get(frequency);
 			if (trigramList == null) {
 				trigramList = new LinkedList<String>();
-				frequencyToTrigram.put(frequency, trigramList);
+				frequencyTrigramsMap.put(frequency, trigramList);
 			}
 			trigramList.add(trigram);
 		}
-
-		return frequencyToTrigram;
+		return frequencyTrigramsMap;
 	}
-
-	/**
-	 * Sort the trigrams by frequency and keep only the fixed number of the most
-	 * frequent trigrams.
-	 * 
-	 * @param frequencyToTrigram
-	 * @return
-	 */
-	private static LinkedHashMap<String, Double> trim(
-			LinkedHashMap<Double, List<String>> frequencyToTrigram) {
-		LinkedList<Double> sortedFrequencies = new LinkedList<Double>(
-				frequencyToTrigram.keySet());
-		Collections.sort(sortedFrequencies, new Comparator<Double>() {
-			@Override
-			public int compare(Double o1, Double o2) {
-				return -1 * Double.compare(o1, o2);
-			}
-
-		});
-
-		LinkedHashMap<String, Double> trigramToFrequency = new LinkedHashMap<String, Double>();
-		int count = 0;
-		for (Double frequency : sortedFrequencies) {
-
-			for (String trigram : frequencyToTrigram.get(frequency)) {
-				if (++count > threshold) {
-					break;
-				}
-				trigramToFrequency.put(trigram, frequency);
-			}
-
+	
+	/** Normalizes the vector of trigrams. */
+	private static void normalize(Map<String, Double> trigrams) {
+		double norm = 0;
+		for (Double d : trigrams.values()) { norm += d * d; }
+		norm = Math.sqrt(norm);
+		List<String> keys = new ArrayList<String>(trigrams.keySet());
+		for (String trigram : keys) {
+			trigrams.put(trigram, trigrams.get(trigram) / norm);
 		}
-		return trigramToFrequency;
 	}
 }
