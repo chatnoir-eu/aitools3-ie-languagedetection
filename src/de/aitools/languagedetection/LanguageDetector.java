@@ -11,7 +11,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.net.URL;
 import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -48,69 +47,19 @@ public class LanguageDetector {
 	 * file, the index is refreshed.
 	 */
 	private static final String PACKAGE_PATH;
-	private static final String SERIALIZATION_NAME;
+	private static final String SERIALIZATION_NAME = "language-model-index.obj";
 	static {
 		String thisPackage = LanguageDetector.class.getPackage().getName();
 		PACKAGE_PATH = "/" + thisPackage.replace('.', '/');
-		SERIALIZATION_NAME = "language-models.obj";
 		String resource = PACKAGE_PATH + "/" + SERIALIZATION_NAME;
 		InputStream is = LanguageModel.class.getResourceAsStream(resource);
-		if (is != null) { load(is); }
+		if (is != null) { read(is); }
 		else {
 			createLanguageModelIndex();
 			write();
 		}
 	}
-
-	/**
-	 * Public part:
-	 */
-
-	/**
-	 * Returns the language of a given string by analyzing the distribution of
-	 * trigram frequencies.
-	 * 
-	 * @param text
-	 * @return
-	 */
-	public Locale getLanguage(String text) {
-		LinkedHashMap<String, Double> trigrams =
-			TrigramStatistic.getTrigrams(text);
-
-		Map<Locale, Double> result = new LinkedHashMap<Locale, Double>();
-		Map<Locale, Double> postlist = null;
-		for (String trigram : trigrams.keySet()) {
-			postlist = languageModelIndex.get(trigram);
-			if (postlist == null) {
-				continue;
-			}
-			for (Locale locale : postlist.keySet()) {
-				double product = postlist.get(locale) * trigrams.get(trigram);
-				Double d = result.get(locale);
-				if (d == null) {
-					d = new Double(0.);
-				}
-				result.put(locale, product + d);
-			}
-		}
-
-		double highestScalarproduct = 0;
-		Locale bestLocale = Locale.ENGLISH;
-		for (Locale locale : result.keySet()) {
-
-			double d = result.get(locale);
-			if (d > highestScalarproduct) {
-				highestScalarproduct = d;
-				bestLocale = locale;
-			}
-		}
-		return bestLocale;
-	}
-
-	/**
-	 * Private part:
-	 */
-
+	
 	/**
 	 * This method creates the language model index from all the *.model files
 	 * in the models package.
@@ -135,8 +84,10 @@ public class LanguageDetector {
 				if (postlist == null) {
 					postlist = new LinkedHashMap<Locale, Double>();
 				}
-				Double value = postlist.get(language);
-				if (value != null) { value *= trigramIndex.get(trigram); }
+				Double value = trigramIndex.get(trigram);
+				if (postlist.containsKey(language)) {
+					value *= postlist.get(language);  // This is never called!
+				}
 				postlist.put(language, value);
 				languageModelIndex.put(trigram, postlist);
 			}
@@ -145,78 +96,95 @@ public class LanguageDetector {
 		}
 		System.out.println("+++ " + count + " languagemodels loaded.");
 	}
-
+	
 	/**
-	 * Load the serialized language model index from the given input stream.
-	 * 
-	 * @param is
+	 * Reads a language model index object from an input stream.
 	 */
-	@SuppressWarnings("unchecked")
-	private static void load(InputStream is) {
+	@SuppressWarnings({ "unchecked", "finally" })
+	private static void read(InputStream is) {
+		ObjectInputStream objIn = null;
 		try {
-			ObjectInputStream objIn = new ObjectInputStream(
-					new BufferedInputStream(is));
-			try {
-				languageModelIndex = (Map<String, Map<Locale, Double>>) objIn.readObject();
-				objIn.close();
-			} catch (ClassNotFoundException e) {
-				objIn.close();
-				throw new IOException(e);
-			}
-		} catch (IOException ioe) {
-			ioe.printStackTrace();
-			System.exit(-1);
+			objIn = new ObjectInputStream(new BufferedInputStream(is));
+			languageModelIndex = 
+				(Map<String, Map<Locale, Double>>)objIn.readObject();
+			objIn.close();
 		}
+		catch (IOException e) { e.printStackTrace(); }
+		catch (ClassNotFoundException e) { e.printStackTrace(); }
+		finally { throw new RuntimeException(); }
 	}
-
+	
 	/**
-	 * Serialize the language model index.
+	 * Writes the language model index to a within this package hierarchy.
 	 */
 	private static void write() {
+		File directory = LanguageModel.modelDir.getParentFile();
+		File objFile = new File(directory, SERIALIZATION_NAME);
 		try {
-			String directory = LanguageModel.modelDir.getParentFile().getAbsolutePath().replaceAll(PACKAGE_PATH, "");
-			File serializazion = new File(directory, SERIALIZATION_NAME);
-			FileOutputStream fos = new FileOutputStream(serializazion);
+			FileOutputStream fos = new FileOutputStream(objFile);
 			BufferedOutputStream bos = new BufferedOutputStream(fos);
 			ObjectOutputStream objOut = new ObjectOutputStream(bos);
 			objOut.writeObject(languageModelIndex);
 			objOut.close();
-			// Saving the serialized file in both, the src and bin directory.
-			// Either single location for the serialized file could cause
-			// unexpected behavior of this method, so we put it in both.
-			copyFile(serializazion, new File(serializazion.getAbsolutePath()
-					.replace("src", "bin")));
-		} catch (IOException ioe) {
-			ioe.printStackTrace();
-			System.exit(-1);
+			// The serialized object is saved copied to the bin directory since
+			// only one of the two locations could cause unexpected behavior.
+			copyFile(objFile, new File(
+				objFile.getAbsolutePath().replace("src", "bin")
+			));
+		}
+		catch (IOException e) {
+			e.printStackTrace();
+			throw new RuntimeException();
 		}
 	}
-
+	
 	/**
-	 * Simple file copy method.
-	 * 
-	 * @param in
-	 * @param out
-	 * @throws IOException
+	 * Copies a file.
 	 */
-	private static void copyFile(File in, File out) throws IOException {
-		if (in.equals(out)) {
-			return;
-		}
-		FileInputStream fis = new FileInputStream(in);
-		FileOutputStream fos = new FileOutputStream(out);
+	private static void copyFile(File from, File to) throws IOException {
+		if (from == null || to == null) { throw new NullPointerException(); }
+		if (from.equals(to)) { return; }
+		FileInputStream fis = new FileInputStream(from);
+		FileOutputStream fos = new FileOutputStream(to);
 		byte[] buf = new byte[1024];
 		int i = 0;
-		while ((i = fis.read(buf)) != -1) {
-			fos.write(buf, 0, i);
-		}
+		while ((i = fis.read(buf)) != -1) { fos.write(buf, 0, i); }
 		fis.close();
 		fos.close();
 	}
 
 	/**
-	 * The main method is required to build the serialization for the jar with
-	 * ant.
+	 * Detects the language of a string based on its character trigrams.
+	 */
+	public Locale getLanguage(String s) {
+		Map<String, Double> trigrams = TrigramStatistic.getTrigrams(s);
+		Map<Locale, Double> result = new LinkedHashMap<Locale, Double>();
+		Map<Locale, Double> postlist = null;
+		for (String trigram : trigrams.keySet()) {
+			postlist = languageModelIndex.get(trigram);
+			if (postlist == null) { continue; }
+			for (Locale language : postlist.keySet()) {
+				double product = postlist.get(language) * trigrams.get(trigram);
+				Double d = result.get(language);
+				if (d == null) { d = new Double(0); }
+				result.put(language, product + d);
+			}
+		}
+
+		double maxScalarProduct = 0;
+		Locale detected = Locale.ENGLISH;
+		for (Locale language : result.keySet()) {
+			double d = result.get(language);
+			if (d > maxScalarProduct) {
+				maxScalarProduct = d;
+				detected = language;
+			}
+		}
+		return detected;
+	}
+
+	/**
+	 * Required so that the language model index can be initialized by Ant.
 	 */
 	public static void main(String[] args) {}
 }
