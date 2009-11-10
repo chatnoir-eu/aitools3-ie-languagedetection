@@ -11,6 +11,7 @@
 	<property name="project.src" location="src" />
 	<property name="project.conf" location="conf" />
 	<property name="project.build" location="build" />
+	<property name="project.bin" location="bin" />
 	<property name="project.classbin" location="${project.build}/classbin" />
 	<property name="project.jarbin" location="${project.build}/jarbin" />
 
@@ -51,7 +52,7 @@
 		<delete file="${project.classbin}/de/aitools/languagedetection/LanguageModels.serialized" />
 		<java classname="de.aitools.languagedetection.LanguageDetection">
 			<classpath>
-				<pathelement path="${project.classbin}" />
+				<pathelement path="${project.bin}" />
 			</classpath>
 		</java>
 
