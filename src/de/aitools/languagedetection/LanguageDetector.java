@@ -48,7 +48,7 @@ public class LanguageDetector {
 	 * file, the index will be refreshed.
 	 */
 	private static final String PACKAGE_PATH;
-	static final String SERIALIZATION_NAME = "language-model-index.obj";
+	public static final String SERIALIZATION_NAME = "language-model-index.obj";
 	static {
 		String thisPackage = LanguageDetector.class.getPackage().getName();
 		PACKAGE_PATH = "/" + thisPackage.replace('.', '/');
