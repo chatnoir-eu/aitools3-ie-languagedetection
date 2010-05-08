@@ -4,7 +4,7 @@
 
 	     wstud-languagedetection
 	     ====================================================================== -->
-<project name="wstud-languagedetection" default="jar" basedir="..">
+<project name="aitools3-languagedetection" default="jar" basedir="..">
 	<!-- - - - - - - - - - - - - - - - - - 
 	          properties                   
 	         - - - - - - - - - - - - - - - - - -->
