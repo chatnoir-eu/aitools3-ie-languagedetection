@@ -1,0 +1,75 @@
+<?xml version="1.0"?>
+<!-- ====================================================================== 
+	     @version $Id$     
+
+	     wstud-languagedetection
+	     ====================================================================== -->
+<project name="aitools3-languagedetection" default="jar" basedir="..">
+	<!-- - - - - - - - - - - - - - - - - - 
+	          properties                   
+	         - - - - - - - - - - - - - - - - - -->
+	<property name="project.src" location="src" />
+	<property name="project.conf" location="conf" />
+	<property name="project.build" location="build" />
+	<property name="project.bin" location="bin" />
+	<property name="project.classbin" location="${project.build}/classbin" />
+	<property name="project.jarbin" location="${project.build}/jarbin" />
+
+	<!-- ================================= 
+	          target: jar              
+	        ================================= -->
+	<target name="jar" depends="compile, create_serialization">
+		<mkdir dir="${project.jarbin}" />
+		<jar destfile="${project.jarbin}/${ant.project.name}-${DSTAMP}${TSTAMP}.jar">
+			<fileset dir="${project.classbin}" />
+			<manifest>
+				<!--<attribute name="Class-Path" value=". ${project.lib.jars.relative}" />-->
+				<section name="${ant.project.name}">
+					<attribute name="Sealed" value="false" />
+				</section>
+			</manifest>
+		</jar>
+		<antcall target="clean" />
+	</target>
+
+	<!-- - - - - - - - - - - - - - - - - - 
+	          target: compile                      
+	         - - - - - - - - - - - - - - - - - -->
+	<target name="compile" depends="init">
+		<javac srcdir="${project.src}" destdir="${project.classbin}" target="1.6" encoding="utf8" classpath="${project.external.classes}" debug="true" />
+		<copy todir="${project.classbin}">
+			<fileset dir="${project.src}" includes="**/*" />
+			<fileset dir="${project.conf}" includes="**/*" />
+		</copy>
+	</target>
+
+	
+
+	<!-- - - - - - - - - - - - - - - - - - 
+	          target: create_serialization                      
+	         - - - - - - - - - - - - - - - - - -->
+	<target name="create_serialization" depends="compile">
+		<delete file="${project.classbin}/de/aitools/languagedetection/LanguageModels.serialized" />
+		<java classname="de.aitools.languagedetection.LanguageDetection">
+			<classpath>
+				<pathelement path="${project.bin}" />
+			</classpath>
+		</java>
+
+	</target>
+	
+	<!-- - - - - - - - - - - - - - - - - - 
+	          target: init                      
+	         - - - - - - - - - - - - - - - - - -->
+	<target name="init" depends="clean">
+		<tstamp />
+		<mkdir dir="${project.classbin}" />
+	</target>
+
+	<!-- - - - - - - - - - - - - - - - - - 
+	          target: clean                      
+	         - - - - - - - - - - - - - - - - - -->
+	<target name="clean">
+		<delete dir="${project.classbin}" />
+	</target>
+</project>
