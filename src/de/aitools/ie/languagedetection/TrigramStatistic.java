@@ -1,5 +1,5 @@
 // Copyright (C) 2009 webis.de. All rights reserved.
-package de.aitools.languagedetection;
+package de.aitools.ie.languagedetection;
 
 import java.util.ArrayList;
 import java.util.Collections;
