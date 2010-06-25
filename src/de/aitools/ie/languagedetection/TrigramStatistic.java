@@ -22,8 +22,8 @@ public class TrigramStatistic {
 
 	/**
 	 * Creates a map containing a fixed number of the most frequent trigrams in
-	 * a given string. At the same time it is checked whether the amount of 
-	 * non-Latin characters is higher then the amount of Latin characters. In 
+	 * a given string. At the same time it is checked whether the amount of
+	 * non-Latin characters is higher then the amount of Latin characters. In
 	 * this case all Latin character trigrams are removed. This is necessary
 	 * because English words and sentences can be found in texts of all
 	 * languages, and, since the alphabet of Eastern languages like Chinese is
@@ -35,7 +35,7 @@ public class TrigramStatistic {
 		int latinChar = 0;
 		int nonLatinChar = 0;
 		String trigram;
-		for (int i = 0; i < s.length() - 3; ++i) {
+		for (int i = 0; i <= s.length() - 3; ++i) {
 			trigram = new String(s.substring(i, i + 3));
 			Double d = trigrams.get(trigram);
 			if (d == null) { d = new Double(0); }
@@ -66,7 +66,7 @@ public class TrigramStatistic {
 	/** Retains the MAX_NUM_TRIGRAMS most frequent trigrams. */
 	private static Map<String, Double> trim(Map<String, Double> trigrams) {
 		Map<Double, List<String>> frequencyTrigramsMap = invert(trigrams);
-		List<Double> frequencies = 
+		List<Double> frequencies =
 			new ArrayList<Double>(frequencyTrigramsMap.keySet());
 		Collections.sort(frequencies, Collections.reverseOrder());
 		Map<String, Double> newTrigrams = new HashMap<String, Double>();
@@ -79,12 +79,12 @@ public class TrigramStatistic {
 		}
 		return newTrigrams;
 	}
-	
+
 	/** Inverts the mapping of trigrams to frequencies. */
 	private static Map<Double, List<String>> invert(
 		Map<String, Double> trigramFrequencyMap
 	) {
-		Map<Double, List<String>> frequencyTrigramsMap = 
+		Map<Double, List<String>> frequencyTrigramsMap =
 			new HashMap<Double, List<String>>();
 		for (String trigram : trigramFrequencyMap.keySet()) {
 			Double frequency = trigramFrequencyMap.get(trigram);
@@ -97,7 +97,7 @@ public class TrigramStatistic {
 		}
 		return frequencyTrigramsMap;
 	}
-	
+
 	/** Normalizes the vector of trigrams. */
 	private static void normalize(Map<String, Double> trigrams) {
 		double norm = 0;
