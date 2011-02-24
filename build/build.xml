@@ -11,5 +11,5 @@
 	
 	<path id="dependencies"></path>
 	
-	<import file="${basedir}/../../code-generic/build/build-master.xml" />
+	<import file="${basedir}/../../code-generic/code-build/build-master.xml" />
 </project>
