@@ -48,7 +48,7 @@ public class LanguageModel implements Serializable {
 		Map<String, Double> trigramMap = new HashMap<String, Double>();
 		File modelFile = new File(modelDir, language.getLanguage() + ".model");
 		Scanner fileScanner = null;
-		try { fileScanner = new Scanner(modelFile); }
+		try { fileScanner = new Scanner(modelFile, "UTF-8"); }
 		catch (FileNotFoundException e) { e.printStackTrace(); }
 		finally { if(fileScanner == null) { throw new RuntimeException(); } }
 		fileScanner.useDelimiter("_ENDLINE_\n");
