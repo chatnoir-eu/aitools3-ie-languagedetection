@@ -55,7 +55,10 @@ public class LanguageModel implements Serializable {
 		while (fileScanner.hasNext()) {
 			Scanner lineScanner = new Scanner(fileScanner.next());
 			lineScanner.useDelimiter("_DELIMITER_");
-			trigramMap.put(lineScanner.next(), Double.parseDouble(lineScanner.next()));
+			trigramMap.put(lineScanner.next(),
+			               // TODO: Why does lineScanner.nextDouble() not work
+			               // on Mac?
+			               Double.parseDouble(lineScanner.next()));
 		}
 		LanguageModel lm = new LanguageModel(language, trigramMap);
 		return lm;
