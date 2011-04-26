@@ -175,7 +175,43 @@ public class LanguageDetector {
 				detected = language;
 			}
 		}
-		return detected;
+		return setDefaultCountry(detected);
+	}
+	
+	/**
+	 * The language detection does not support {@link Locale#getCountry()}.
+	 * However, other components need that information, so this function is a
+	 * workaround to set a default country for given language. (trenkman)
+	 */
+	private static final Locale setDefaultCountry(Locale locale) {
+		// Set most common countries, e.g. "de" -> "de_DE" NOT "de_CH"
+		// These mappings are from Locale.getAvailableLocales()
+		if (locale.getLanguage().equals("de")) return new Locale("de", "DE");
+		if (locale.getLanguage().equals("en")) return new Locale("en", "US");
+		if (locale.getLanguage().equals("fr")) return new Locale("fr", "FR");
+		if (locale.getLanguage().equals("it")) return new Locale("it", "IT");
+		if (locale.getLanguage().equals("es")) return new Locale("es", "ES");
+		if (locale.getLanguage().equals("pl")) return new Locale("pl", "PL");
+		if (locale.getLanguage().equals("lt")) return new Locale("lt", "LT");
+		if (locale.getLanguage().equals("mk")) return new Locale("mk", "MK");
+		if (locale.getLanguage().equals("pt")) return new Locale("pt", "PT");
+		if (locale.getLanguage().equals("no")) return new Locale("no", "NO");
+		if (locale.getLanguage().equals("ar")) return new Locale("ar", "AE");
+		if (locale.getLanguage().equals("fi")) return new Locale("fi", "FI");
+		if (locale.getLanguage().equals("sk")) return new Locale("sk", "SK");
+		if (locale.getLanguage().equals("tr")) return new Locale("tr", "TR");
+		if (locale.getLanguage().equals("lv")) return new Locale("lv", "LV");
+		if (locale.getLanguage().equals("nl")) return new Locale("nl", "NL");
+		if (locale.getLanguage().equals("is")) return new Locale("is", "IS");
+		if (locale.getLanguage().equals("th")) return new Locale("th", "TH");
+		if (locale.getLanguage().equals("hu")) return new Locale("hu", "HU");
+		if (locale.getLanguage().equals("ru")) return new Locale("ru", "RU");
+		if (locale.getLanguage().equals("bg")) return new Locale("bg", "BG");
+		if (locale.getLanguage().equals("mt")) return new Locale("mt", "MT");
+		if (locale.getLanguage().equals("ro")) return new Locale("ro", "RO");
+		if (locale.getLanguage().equals("hr")) return new Locale("hr", "HR");
+		if (locale.getLanguage().equals("jp")) return new Locale("jp", "JP");
+		return locale;
 	}
 
 	/** Required so that the language model index can be initialized by Ant. */
