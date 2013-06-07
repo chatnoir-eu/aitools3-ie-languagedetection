@@ -59,7 +59,9 @@ public class LanguageModel implements Serializable {
 			               // TODO: Why does lineScanner.nextDouble() not work
 			               // on Mac?
 			               Double.parseDouble(lineScanner.next()));
+			lineScanner.close();
 		}
+		fileScanner.close();
 		LanguageModel lm = new LanguageModel(language, trigramMap);
 		return lm;
 	}
