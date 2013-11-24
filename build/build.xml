@@ -1,15 +1,15 @@
 <?xml version="1.0"?>
 <project name="aitools3-ie-languagedetection" default="jar" basedir="..">
 
-	<property name="keeponly" value="de.aitools.ie.languagedetection.**" />
-	
     <path id="sources">
         <pathelement location="src" />
     </path>
 	
-	<path id="libraries"></path>
+	<path id="libraries">
+	</path>
 	
-	<path id="dependencies"></path>
+	<path id="dependencies">
+	</path>
 	
 	<import file="${basedir}/../../code-generic/code-build/build-master.xml" />
 </project>
