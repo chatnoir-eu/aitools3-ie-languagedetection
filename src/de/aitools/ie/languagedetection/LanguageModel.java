@@ -6,8 +6,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.Serializable;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Locale;
@@ -32,10 +32,16 @@ public class LanguageModel implements Serializable {
 	static {
 		URL url = LanguageModel.class.getResource("models");
 		File dir = null;
-		try { dir = new File(url.toURI().getPath().replace("/bin/", "/src/")); }
-		catch (URISyntaxException e) { e.printStackTrace(); }
-		finally { 
-			if(dir == null || !dir.exists()) { throw new RuntimeException(); }
+		if (url != null)
+		{
+  		try { dir = new File(url.toURI().getPath().replace("/bin/", "/src/")); }
+  		catch (Exception e) {
+  		  System.err.println("Could not load models directory. "
+  		      + "Falling back to static model list.");
+  		  }
+  /*		finally { 
+  			if(dir == null || !dir.exists()) { throw new RuntimeException(); }
+  		}*/
 		}
 		modelDir = dir;
 	}
@@ -46,11 +52,21 @@ public class LanguageModel implements Serializable {
 	public static LanguageModel read(Locale language) {
 		if(language == null) { throw new NullPointerException(); }
 		Map<String, Double> trigramMap = new HashMap<String, Double>();
-		File modelFile = new File(modelDir, language.getLanguage() + ".model");
-		Scanner fileScanner = null;
-		try { fileScanner = new Scanner(modelFile, "UTF-8"); }
-		catch (FileNotFoundException e) { e.printStackTrace(); }
-		finally { if(fileScanner == null) { throw new RuntimeException(); } }
+    Scanner fileScanner = null;
+		if (modelDir == null || !modelDir.exists())
+		{
+		  final InputStream modelStream =
+		      LanguageModel.class.getResourceAsStream(
+		          "models/" + language.getLanguage() + ".model");
+		  fileScanner = new Scanner(modelStream, "UTF-8");
+		}
+		else
+		{
+	    File modelFile = new File(modelDir, language.getLanguage() + ".model");
+	    try { fileScanner = new Scanner(modelFile, "UTF-8"); }
+	    catch (FileNotFoundException e) { e.printStackTrace(); }
+		}
+		if(fileScanner == null) { throw new RuntimeException(); }
 		fileScanner.useDelimiter("_ENDLINE_\n");
 		while (fileScanner.hasNext()) {
 			Scanner lineScanner = new Scanner(fileScanner.next());

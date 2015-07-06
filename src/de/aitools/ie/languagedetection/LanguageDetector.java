@@ -34,6 +34,12 @@ import java.util.Map;
  */
 public class LanguageDetector {
 
+  private static String[] MODELS = {
+    "ar", "bg", "ca", "cs", "da", "de", "el", "en", "eo", "es", "fa", "fi",
+    "fr", "hr", "hu", "in", "it", "iw", "ja", "ko", "lt", "nl", "no", "pt",
+    "ro", "ru", "sk", "sl", "sr", "th", "tr", "uk", "vi", "zh"
+  };
+
 	/**
 	 * Inverted index which maps a character trigram onto a list of occurence 
 	 * frequencies in all supported languages, i.e.,
@@ -67,30 +73,46 @@ public class LanguageDetector {
 		System.out.println("This needs to be done only once.\n");
 		languageModelIndex = new HashMap<String, Map<Locale, Double>>();
 		int count = 0;
-		for (File modelFile : LanguageModel.modelDir.listFiles()) {
-			String name = modelFile.getName();
-			if (!name.endsWith("model")) { continue; }
-			Locale language = new Locale(name.substring(0, 2));
-			System.out.print("Creating " + language + " model ... ");
-			LanguageModel model = LanguageModel.read(language);
-			Map<String, Double> trigramIndex = model.getTrigrams(); 
-			for (String trigram : trigramIndex.keySet()) {
-				Map<Locale, Double> postlist = languageModelIndex.get(trigram);
-				if (postlist == null) {
-					postlist = new HashMap<Locale, Double>();
-				}
-				Double value = trigramIndex.get(trigram);
-				if (postlist.containsKey(language)) {
-					value *= postlist.get(language);  // This is never reached!
-				}
-				postlist.put(language, value);
-				languageModelIndex.put(trigram, postlist);
-			}
-			++count;
-			System.out.println("done.");
-		}
+    if (LanguageModel.modelDir != null && LanguageModel.modelDir.exists())
+    {
+  		for (File modelFile : LanguageModel.modelDir.listFiles()) {
+  			String name = modelFile.getName();
+  			if (!name.endsWith("model")) { continue; }
+  			Locale language = new Locale(name.substring(0, 2));
+  			addToLanguageModelIndex(language);
+  	    ++count;
+  		}
+    }
+    else
+    {
+      for (String languageTag : MODELS)
+      {
+        Locale language = new Locale(languageTag);
+        addToLanguageModelIndex(language);
+        ++count;
+      }
+    }
 		System.out.println("+++ " + count + " language models created.");
 	}
+
+  private static void addToLanguageModelIndex(Locale language) {
+    System.out.print("Creating " + language + " model ... ");
+    LanguageModel model = LanguageModel.read(language);
+    Map<String, Double> trigramIndex = model.getTrigrams(); 
+    for (String trigram : trigramIndex.keySet()) {
+      Map<Locale, Double> postlist = languageModelIndex.get(trigram);
+      if (postlist == null) {
+        postlist = new HashMap<Locale, Double>();
+      }
+      Double value = trigramIndex.get(trigram);
+      if (postlist.containsKey(language)) {
+        value *= postlist.get(language);  // This is never reached!
+      }
+      postlist.put(language, value);
+      languageModelIndex.put(trigram, postlist);
+    }
+    System.out.println("done.");
+  }
 	
 	/** Reads a language model index object from an input stream. */
 	@SuppressWarnings({ "unchecked" })
@@ -116,25 +138,28 @@ public class LanguageDetector {
 	
 	/** Writes the language model index to a within this package hierarchy. */
 	private static void write() {
-		File directory = LanguageModel.modelDir.getParentFile();
-		if(!directory.exists()) { return; }
-		File objFile = new File(directory, SERIALIZATION_NAME);
-		try {
-			OutputStream out = new FileOutputStream(objFile);
-			out = new BufferedOutputStream(out);
-			ObjectOutputStream objOut = new ObjectOutputStream(out);
-			objOut.writeObject(languageModelIndex);
-			objOut.close();
-			// The serialized object is saved copied to the bin directory since
-			// only one of the two locations could cause unexpected behavior.
-			copyFile(objFile, new File(
-				objFile.getAbsolutePath().replace("src", "bin")
-			));
-		}
-		catch (IOException e) {
-			e.printStackTrace();
-			throw new RuntimeException();
-		}
+	  if (LanguageModel.modelDir != null && LanguageModel.modelDir.exists())
+	  {
+  		File directory = LanguageModel.modelDir.getParentFile();
+  		if(!directory.exists()) { return; }
+  		File objFile = new File(directory, SERIALIZATION_NAME);
+  		try {
+  			OutputStream out = new FileOutputStream(objFile);
+  			out = new BufferedOutputStream(out);
+  			ObjectOutputStream objOut = new ObjectOutputStream(out);
+  			objOut.writeObject(languageModelIndex);
+  			objOut.close();
+  			// The serialized object is saved copied to the bin directory since
+  			// only one of the two locations could cause unexpected behavior.
+  			copyFile(objFile, new File(
+  				objFile.getAbsolutePath().replace("src", "bin")
+  			));
+  		}
+  		catch (IOException e) {
+  			e.printStackTrace();
+  			throw new RuntimeException();
+  		}
+	  }
 	}
 	
 	/** Copies a file. */
